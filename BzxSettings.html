@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Manajemen Pengguna</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      background: #f0f2f5;
+    }
+
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-top: 5px;
+    }
+
+    button {
+      background: #0066cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #004c99;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #222;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Manajemen Pengguna</h1>
+
+  <div class="form-group">
+    <label>Username:</label>
+    <input type="text" id="username">
+  </div>
+  <div class="form-group">
+    <label>Password:</label>
+    <input type="text" id="password">
+  </div>
+  <div class="form-group">
+    <label>Akses:</label>
+    <select id="akses">
+      <option value="1">1 Perangkat</option>
+      <option value="2">2 Perangkat</option>
+      <option value="open">Tanpa Batas</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Status:</label>
+    <select id="status">
+      <option value="Aktif">Aktif</option>
+      <option value="Blokir">Blokir</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Masa Aktif (hari, 0 = unlimited):</label>
+    <input type="number" id="masaAktif" value="0" min="0">
+  </div>
+
+  <button onclick="tambahUser()">Tambah / Update User</button>
+
+  <table id="userTable">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Akses</th>
+        <th>Status</th>
+        <th>Masa Aktif</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB7_5nHJeTPtqJ7Yc43pxWHQRFxwqgXm0k",
+      authDomain: "bzxsettings.firebaseapp.com",
+      databaseURL: "bzxsettings-default-rtdb.firebaseio.com",
+      projectId: "bzxsettings",
+      storageBucket: "bzxsettings.appspot.com",
+      messagingSenderId: "219853116348",
+      appId: "1:219853116348:android:9ab69fa9e04316b307d1b9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function tambahUser() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const akses = document.getElementById("akses").value;
+      const status = document.getElementById("status").value;
+      const masaAktif = parseInt(document.getElementById("masaAktif").value);
+
+      if (!username || !password) {
+        alert("Isi semua data!");
+        return;
+      }
+
+      const data = {
+        password: password,
+        Acessos: akses,
+        Status: status,
+        MasaAktif: isNaN(masaAktif) ? 0 : masaAktif
+      };
+
+      db.ref("Users/" + username).set(data);
+    }
+
+    function hapusUser(username) {
+      if (confirm("Yakin ingin menghapus " + username + "?")) {
+        db.ref("Users/" + username).remove();
+      }
+    }
+
+    db.ref("Users").on("value", (snapshot) => {
+      const tableBody = document.querySelector("#userTable tbody");
+      tableBody.innerHTML = "";
+      snapshot.forEach((child) => {
+        const user = child.key;
+        const val = child.val();
+        const row = `
+          <tr>
+            <td>${user}</td>
+            <td>${val.password || ""}</td>
+            <td>${val.Acessos || ""}</td>
+            <td>${val.Status || ""}</td>
+            <td>${val.MasaAktif || "0"}</td>
+            <td><button onclick="hapusUser('${user}')">Hapus</button></td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    });
+  </script>
+</body>
+</html>
